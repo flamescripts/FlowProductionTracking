@@ -1,2 +1,0 @@
-# FlowProductionTracking
-Flow (Shotgrid) scripts
