@@ -46,7 +46,7 @@ the Flow site name to replace flow_sitename value in the FQDN list.
 
 - Example usage with a flow_sitename argument:
 
-   **Note**: replace flow_sitename with your FPT site name.
+   **Note**: replace flow_sitename with your FPT site name (hostname).
 
 
    ```python3 flow_fqdn_checker.py flow_sitename```
