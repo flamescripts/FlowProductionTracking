@@ -33,6 +33,8 @@ advised as this has not been thoroughly tested.
 
 ## Installation:
 - The script itself should dowloaded or cloned to a path that is accessible to Python3.
+- The URL data comes from the dictionary file ```url_dict.py```.
+- The values for ```timeout``` and ```port``` can be modified.
 
 
 ## Usage
