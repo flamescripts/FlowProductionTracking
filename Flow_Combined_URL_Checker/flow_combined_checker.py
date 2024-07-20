@@ -35,7 +35,7 @@ def validate_sitename():
     if len(sys.argv) > 1:
         flow_sitename = sys.argv[1]
     else:
-        flow_sitename = input("\nNo argument provided.  Please enter the shotgrid sitename(hostname) and press enter:\n")
+        flow_sitename = input("\nPlease enter the shotgrid sitename(hostname) and press enter:\n")
 
     # If FPT sitename is a fqdn, strip out everything but the hostname/subdomain
     if '.' in flow_sitename:
