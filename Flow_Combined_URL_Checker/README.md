@@ -2,28 +2,22 @@
 Flow Production Tracking "FPT" (formerly known as Shotgrid/Shotgun)
 
 This Python 3 script is designed to validate whether a list of Fully Qualified Domain Names (FQDNs),
-Autodesk Subscription URLs and Autodesk Identity URLs can connect to port 443 or not. The script is
+Autodesk Subscription URLs and Autodesk Identity URLs can be reached over port 443. The script is
 based on the list of FQDNs referenced in the FPT Ecosystem help page, "Which URLs/Protocols need to
 be allowed for Autodesk Subscription Licensing" page and the "Which URLs/Protocols need to be allowed
-for Autodesk Identity Manager" help page.. Iterating over each URL, attempting to establish a socket
-connection using the Python socket library. The script displays a list of URLs that were able to connect
-to a selected port. as well as the sites that couldn't.  Curl is used for the sitename check.
+for Autodesk Identity Manager" help page. Iterating over each URL, attempting to establish a socket
+connection using the Python socket library. Curl is used for a sitename check.  The script displays
+a list of URLs that were able to connect to a selected port, as well as the sites that couldn't.
 
-**Note**: An alternate to using Python to create a socket connection would be to itterate using 
+**Note**: An alternate to using Python to create a socket connection would be to itterate using openssl. 
 
 ```openssl s_client -connect url:443 -tls1_2```
 
 
 ## Disclaimer
 
-This is not an official Autodesk certified script. Neither the author nor Autodesk are responsible for any
-use, misuse, unintended results, or data loss that may occur from using this script. This script has not
-been thoroughly tested and is a work in progress. It was created on personal time to address a specific
-customer request and may not be applicable to your workflow.
-
-**Use at your own risk.**
-This script is intended for providing guidance only. There is no support provided. Caution is strongly
-advised as this has not been thoroughly tested.
+This script has not been thoroughly tested and is a work in progress.  This script is intended for
+providing guidance only. There is no support provided.
 
 
 ## Test Environment
@@ -32,15 +26,15 @@ advised as this has not been thoroughly tested.
 
 
 ## Installation:
-- The script itself should dowloaded or cloned to a path that is accessible to Python3.
+- The script and dictionary should dowloaded or cloned to a path that is accessible to Python3.
 - The URL data comes from the dictionary file ```url_dict.py```.
 - The values for ```timeout``` and ```port``` can be modified.
 
 
 ## Usage
 
-This script can be ran with or without an argument.  If no argument is provided AND if a running
-a FQDN check, the script will prompt for the Flow site name to replace flow_sitename value in the FQDN list.   
+This script can be ran with or without an argument.  If no argument is provided AND if running
+an FQDN check, the script will prompt for the Flow site name to replace flow_sitename value in the FQDN list.   
 
 
 - Example usage without an flow_sitename argument:
@@ -50,21 +44,25 @@ a FQDN check, the script will prompt for the Flow site name to replace flow_site
 
 - Example usage with a flow_sitename argument:
 
-   **Note**: replace flow_sitename with your FPT site name (hostname).
-
 
    ```python3 flow_combined_checker.py flow_sitename```
+  
+   **Note**: Please replace "flow_sitename" with the FPT site name (hostname). Utilizing a sitename argument
+  will automatically proceed to the FQDN check, bypassing the subsequent Subscription Licensings and Identity
+  Manager URL options.
 
-After launch, validate the URLs/Protocols nedded by selected the apporpirate key, "F", "S", or "I".
+
+After launch, validate the URLs/Protocols by selected the corresponding key, "F", "S", or "I".
 - 'F' for Flow Production Tracking FQDN
 - 'S' for Autodesk Subscription Licensings
-- 'I' for Autodesk Identity Manager URLs/Protocols: 
+- 'I' for Autodesk Identity Manager
 
 ## Requirements
 
 - Run as the normal OS user.
 - Python 3
 - An active Flow Production tracking site.
+- ```url_dict.py``` in the same path as ```flow_combined_checker.py```.
 
 
 ## Helpful Links
