@@ -31,7 +31,8 @@ fqdns = {
 		"s3-proxy.shotgunstudio.com"
 	],
 	'Analytics': [
-		"api.amplitude.com"
+		"api.amplitude.com",
+		"js-cdn.dynatrace.com"
 	]
 }
 
