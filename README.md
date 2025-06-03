@@ -9,7 +9,7 @@ This Python 3 script checks if a list of Fully Qualified Domain Names (FQDNs) ca
 
 ### Flow Production Tracking API Create User
 Creating user accounts with a Python script in the Flow Production Tracking API:
-- Replace <XXX> in the below script with your site url and user credentials.
+- Replace <XXX> in the script with your site url and user credentials.
 - The auth_token lines can be commented (#) out for Flow sites with 2FA turned off.
 	- If removing the auth_token line, also remove the preceeding comma.
 - Modify the sg.create string to fit the intended workflow.
