@@ -1,8 +1,3 @@
-# Replace <XXX> in the below script with your site url and user credentials.
-# The auth_token lines can be commented (#) out for Flow sites with 2FA turned off.
-# - If removing the auth_token line, also remove the preceeding comma.
-# Modify the sg.create string to fit the intended workflow.
-
 import shotgun_api3
 
 two_factor = input('Enter 2FA Code: ')
