@@ -6,8 +6,10 @@ Autodesk Subscription URLs and Autodesk Identity URLs can be reached over port 4
 based on the list of FQDNs referenced in the FPT Ecosystem help page, "Which URLs/Protocols need to
 be allowed for Autodesk Subscription Licensing" page and the "Which URLs/Protocols need to be allowed
 for Autodesk Identity Manager" help page. Iterating over each URL, attempting to establish a socket
-connection using the Python socket library. Curl is used for a sitename check.  The script displays
-a list of URLs that were able to connect to a selected port, as well as the sites that couldn't.
+connection using the Python socket library. Wildcard entries are not socket-tested, since wildcard 
+domains cannot be resolved directly, and are instead listed separately for manual firewall or proxy
+allowlist review. Curl is used for a sitename check.  The script displays a list of URLs that were 
+able to connect to a selected port, as well as the sites that couldn't.
 
 **Note**: An alternate to using Python to create a socket connection would be to itterate using openssl. 
 
