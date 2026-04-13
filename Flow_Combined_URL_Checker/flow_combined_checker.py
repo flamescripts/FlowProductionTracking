@@ -20,11 +20,11 @@
 #
 # Always Current Version: https://github.com/flamescripts
 
-import socket
-import sys
 import os
+import socket
 import subprocess
-from url_dict import fqdns, subscription, identity
+import sys
+from url_dict import fqdns, identity, subscription
 
 # Customizable variables
 timeout = 5
@@ -42,59 +42,87 @@ def validate_sitename():
         print(f"\nRenaming sitename from {flow_sitename} to {flow_sitename.split('.')[0]}")
         flow_sitename = flow_sitename.split('.')[0]
 
-    return flow_sitename
+    return flow_sitename.strip()
+
+
+def build_fqdn_check_dict(flow_sitename):
+    """Build a per-run FQDN dictionary without mutating the imported module data."""
+    fqdn_data = {key: list(urls) for key, urls in fqdns.items()}
+    fqdn_data['Flow Production Tracking'] = [
+        f'{flow_sitename}.shotgrid.autodesk.com',
+        f'{flow_sitename}.shotgunstudio.com',
+    ] + fqdn_data['Flow Production Tracking']
+    return fqdn_data
 
 # Check if site exists
-def check_sites_exist(flow_sitename, fqdns):
-    shotgrid_url = "https://" + fqdns['Flow Production Tracking'][0]
-    shotgunstudio_url = "https://" + fqdns['Flow Production Tracking'][1]
+def check_sites_exist(flow_sitename):
+    candidate_urls = [
+        f'https://{flow_sitename}.shotgrid.autodesk.com',
+        f'https://{flow_sitename}.shotgunstudio.com',
+    ]
 
     sitename_exists = False
 
-    for url in shotgrid_url, shotgunstudio_url:
+    for url in candidate_urls:
         try:
             # Run curl to check sitename existence
-            command = f"curl -Is {url}"
-            output = subprocess.check_output(command, shell=True).decode()
-
+            output = subprocess.check_output(
+                ['curl', '-I', '-s', url],
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=timeout + 5,
+            )
             # Split output into lines and grab the status code on first line, after the first space
-            lines = output.split('\n')
-            status_line = lines[0]
-            status_code = int(status_line.split(' ')[1])
-
+            status_line = output.splitlines()[0]
+            status_code = int(status_line.split()[1])
             if status_code in (200, 301, 302):
                 sitename_exists = True
-        except (subprocess.CalledProcessError, IndexError, ValueError):
-            print(f"Error: Could not connect to {url}.")
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            IndexError,
+            ValueError,
+        ):
+            print(f'Error: Could not connect to {url}.')
 
     if sitename_exists:
-        print(f"* sitename {flow_sitename} found.")
+        print(f'* sitename {flow_sitename} found.')
     else:
-        print(f"Error: The sitename {flow_sitename} does not exist or is accessible.")
-        sys.exit()
+        print(f'Error: The sitename {flow_sitename} does not exist or is accessible.')
+        sys.exit(1)
+
+
+def is_wildcard_url(url):
+    return '*' in url
 
 # Print connection status of url
 def print_connection_status(url, socket_result):
     if socket_result:
-        print(f"   - {url} (\033[1mCONNECTED\033[0m)")
+        print(f'   - {url} (\033[1mCONNECTED\033[0m)')
     else:
-        print(f"   - {url} (\033[1m*UNABLE TO CONNECT*\033[0m)")
+        print(f'   - {url} (\033[1m*UNABLE TO CONNECT*\033[0m)')
+
+
+def print_wildcard_status(url):
+    print(
+        f'   - {url} '
+        '(\033[1mWILDCARD ENTRY - MANUAL FIREWALL/PROXY REVIEW REQUIRED\033[0m)'
+    )
 
 # Checks if a socket connection can be established with the url/port.
 def test_socket_connection(url):
-    print(f"  Testing connection for {url} port {port}...")
+    print(f'  Testing connection for {url} port {port}...')
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(timeout)
     try:
         result = sock.connect_ex((url, port))
         if result == 0:
-            print(f"   - Connection successful.")
+            print('   - Connection successful.')
             return True
-        else:
-            print(f"   - Connection attempt failed.")
-            return False
+        print('   - Connection attempt failed.')
+        return False
     except socket.gaierror:
-        print(f"* {url} is an invalid Flow sitename/hostname.")
+        print(f'* {url} is an invalid Flow sitename/hostname.')
         return False
     finally:
         sock.close()
@@ -104,68 +132,84 @@ def check_urls(url_dict):
     # Init the lists
     successful_urls = []
     failed_urls = []
+    wildcard_urls = []
 
     for key, urls in url_dict.items():
-        print(f"\n+Checking {key} list:\n")
+        print(f'\n+Checking {key} list:\n')
         for url in urls:
+            if is_wildcard_url(url):
+                print_wildcard_status(url)
+                wildcard_urls.append(url)
+                continue
+
             socket_result = test_socket_connection(url)
             print_connection_status(url, socket_result)
             (successful_urls if socket_result else failed_urls).append(url)
 
-    return successful_urls, failed_urls
+    return successful_urls, failed_urls, wildcard_urls
+
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("Flow Production Tracking URL Checker")
+    print('Flow Production Tracking URL Checker')
 
     if len(sys.argv) > 1:
         check_type = 'F'
     else:
-        # Ask the user what type of check they would like to perform
-        check_type = input("\nPlease select from the following options to to validate the URLs/Protocols nedded:\n 'F' for Flow Production tracking FQDN\n 'S' for Autodesk Subscription Licensings\n 'I' for Autodesk Identity Manager URLs/Protocols:\n").upper()
+        check_type = input(
+            "\nPlease select from the following options to validate the URLs/Protocols needed:\n"
+            " 'F' for Flow Production Tracking FQDN\n"
+            " 'S' for Autodesk Subscription Licensing\n"
+            " 'I' for Autodesk Identity Manager URLs/Protocols:\n"
+        ).upper()
 
     if check_type == 'F':
         # FQDN check
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("Flow Production Tracking FQDN Checker")
+        print('Flow Production Tracking FQDN Checker')
         flow_sitename = validate_sitename()
+        fqdn_data = build_fqdn_check_dict(flow_sitename)
 
-        # Add dynamic URLs to the fqdns dictionary
-        fqdns['Flow Production Tracking'] = [
-            f"{flow_sitename}.shotgrid.autodesk.com",
-            f"{flow_sitename}.shotgunstudio.com",
-        ] + fqdns['Flow Production Tracking']
-
-        print(f"\nChecking if sitename {flow_sitename} exists")
-        check_sites_exist(flow_sitename, fqdns)
-        successful_urls, failed_urls = check_urls(fqdns)
+        print(f'\nChecking if sitename {flow_sitename} exists')
+        check_sites_exist(flow_sitename)
+        successful_urls, failed_urls, wildcard_urls = check_urls(fqdn_data)
 
     elif check_type == 'S':
-        # Subscription check
+    	# Subscription check
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("Flow Production Tracking Subscription URL Checker")
-        successful_urls, failed_urls = check_urls(subscription)
+        print('Flow Production Tracking Subscription URL Checker')
+        successful_urls, failed_urls, wildcard_urls = check_urls(subscription)
 
     elif check_type == 'I':
         # Identity check
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("Flow Production Tracking Identity manager Checker")
-        successful_urls, failed_urls = check_urls(identity)
+        print('Flow Production Tracking Identity manager Checker')
+        successful_urls, failed_urls, wildcard_urls = check_urls(identity)
 
     else:
         print("Invalid selection. Please enter either 'F', 'S', or 'I'.")
         return
 
-    print(f"\n\n\033[1mThe following URLs can connect to port {port} \033[0m")
+    print(f'\n\n\033[1m===============RESULTS=======================\033[0m')
+    print(f'\n\n\033[1mThe following URLs can connect to port {port}\033[0m')
     for url in successful_urls:
         print(url)
 
     if failed_urls:
-        print(f"\n\n\033[1mThe following URLs were unable to connect to port {port} \033[0m")
+        print(f'\n\n\033[1mThe following URLs were unable to connect to port {port}\033[0m')
         for url in failed_urls:
             print(url)
 
-    print("\nScript Complete. Please upload these results to your Autodesk support case.\n")
+    if wildcard_urls:
+        print(
+            '\n\n\033[1mThe following wildcard domains were not socket-tested and '\
+            'should be reviewed as manual firewall/proxy allowlist entries\033[0m'
+        )
+        for url in wildcard_urls:
+            print(url)
 
-if __name__ == "__main__":
+    print('\nScript Complete. Please upload these results to your Autodesk support case.\n')
+
+
+if __name__ == '__main__':
     main()
